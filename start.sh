@@ -4,7 +4,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -19,10 +18,8 @@ fail() { echo -e "${RED}  ✗ $1${NC}"; exit 1; }
 # ─── Prerequisites ──────────────────────────────────────────────
 
 log "Checking prerequisites..."
-
 command -v docker >/dev/null 2>&1 || fail "Docker not found. Install it first."
 docker info >/dev/null 2>&1 || fail "Docker daemon not running."
-
 ok "Docker is ready"
 
 # ─── Environment validation ─────────────────────────────────────
@@ -36,9 +33,9 @@ done
 
 cleanup() {
   local exit_code=$?
-  echo ""
   if [ $exit_code -ne 0 ]; then
-    warn "Startup failed. Run ./stop.sh or 'docker compose down' to clean up."
+    echo ""
+    warn "Startup failed. Run ./stop.sh to clean up."
   fi
   exit $exit_code
 }
@@ -49,60 +46,71 @@ trap cleanup EXIT
 log "Starting PostgreSQL..."
 docker compose -f db/docker-compose.yml up -d --wait 2>/dev/null || \
   docker compose -f db/docker-compose.yml up -d
+sleep 3
+ok "PostgreSQL is running"
 
-sleep 2
+# ─── Initialize DB schema (ranges table) ────────────────────────
 
-# ─── Initialize DB schema if empty ──────────────────────────────
+log "Initializing database schema (ranges)..."
+docker compose -f db/docker-compose.yml exec -T shortly-main-db \
+  psql -U postgres -d shortly-main-db < scripts/db/init.sql 2>&1 | grep -v "^DROP\|^CREATE\|^INSERT\|^COMMIT\|^BEGIN\|^NOTICE"
+ok "Ranges table ready"
 
-log "Initializing database schema..."
-SCHEMA_CHECK=$(docker compose -f db/docker-compose.yml exec -T shortly-main-db \
-  psql -U postgres -d shortly-main-db -t -c \
-  "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'links');" 2>/dev/null || echo "f")
-
-if [ "$SCHEMA_CHECK" != " t" ]; then
-  log "Running schema init..."
-  docker compose -f db/docker-compose.yml exec -T shortly-main-db \
-    psql -U postgres -d shortly-main-db < scripts/db/init.sql
-  ok "Schema initialized"
-else
-  ok "Schema already exists"
-fi
-
-# ─── Start Infrastructure (Kafka + Elasticsearch) ──────────────
+# ─── Start Infrastructure (Kafka + ES) ──────────────────────────
 
 log "Starting Kafka + Elasticsearch..."
 docker compose up -d shortly-kafka shortly-elasticsearch
 
-log "Waiting for Kafka to be healthy (up to 2 min)..."
-if ! docker compose wait shortly-kafka --timeout 120 2>/dev/null; then
-  warn "Kafka healthcheck timed out. Check 'docker compose logs shortly-kafka'"
-fi
+log "Waiting for Elasticsearch (up to 90s)..."
+for i in $(seq 1 30); do
+  if curl -sf http://localhost:9200/_cluster/health 2>/dev/null >/dev/null; then
+    ok "Elasticsearch is healthy"
+    break
+  fi
+  [ "$i" -eq 30 ] && warn "Elasticsearch not ready yet (will keep trying)"
+  sleep 3
+done
 
-log "Waiting for Elasticsearch to be healthy (up to 1 min)..."
-if ! docker compose wait shortly-elasticsearch --timeout 60 2>/dev/null; then
-  warn "Elasticsearch healthcheck timed out. Check 'docker compose logs shortly-elasticsearch'"
-fi
-
-ok "Infrastructure ready"
+log "Waiting for Kafka (up to 2 min)..."
+for i in $(seq 1 40); do
+  if echo 'test' | docker compose exec -T shortly-kafka \
+    /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list 2>/dev/null >/dev/null; then
+    ok "Kafka is healthy"
+    break
+  fi
+  [ "$i" -eq 40 ] && warn "Kafka not ready yet (will keep trying)"
+  sleep 3
+done
 
 # ─── Build and Start All Services ───────────────────────────────
 
-log "Building and starting all services (ticket, redirection, api, consumer, frontend)..."
+log "Building and starting all services..."
 docker compose up -d --build
 
-# ─── Wait for services ──────────────────────────────────────────
+# ─── Wait for services to be healthy ────────────────────────────
 
-log "Waiting for services to be healthy..."
-
-SERVICES=("shortly-ticket-service" "shortly-redirection-service" "shortly-api-service")
-for svc in "${SERVICES[@]}"; do
-  log "  Waiting for $svc..."
-  if docker compose wait "$svc" --timeout 60 2>/dev/null; then
-    ok "$svc is healthy"
-  else
-    warn "$svc healthcheck timed out. Check 'docker compose logs $svc'"
-  fi
+log "Waiting for HTTP services to respond..."
+for svc in "Ticket:5000/api/v1/health-check" "Redirection:8000/api/v1/health-check" "API:8080/api/v1/health-check"; do
+  name="${svc%%:*}"
+  path="${svc#*:}"
+  port="${path%%/*}"
+  log "  $name ($path)..."
+  for i in $(seq 1 30); do
+    if curl -sf "http://localhost/$path" 2>/dev/null >/dev/null; then
+      ok "$name is healthy"
+      break
+    fi
+    [ "$i" -eq 30 ] && warn "$name not responding — check 'docker compose logs shortly-$(echo $name | tr '[:upper:]' '[:lower:]')-service'"
+    sleep 2
+  done
 done
+
+# ─── Create links table (depends on better-auth user table) ─────
+
+log "Creating links table (after better-auth migration)..."
+docker compose -f db/docker-compose.yml exec -T shortly-main-db \
+  psql -U postgres -d shortly-main-db < scripts/db/links.sql 2>&1 | grep -v "^DROP\|^CREATE\|^INSERT\|^COMMIT\|^BEGIN\|^NOTICE\|^psql"
+ok "Links table ready"
 
 # ─── Summary ────────────────────────────────────────────────────
 
@@ -121,11 +129,12 @@ echo -e "  ${CYAN}PostgreSQL:${NC}        localhost:5432"
 echo ""
 echo -e "  ${YELLOW}Logs:${NC}  docker compose logs -f <service-name>"
 echo -e "  ${YELLOW}Stop:${NC}  ./stop.sh"
-echo -e "  ${YELLOW}Down:${NC}  docker compose down"
 echo ""
 
-# Verify health
-log "Quick health check..."
+# ─── Final health check ────────────────────────────────────────
+
+log "Final health check..."
+all_ok=true
 for url in \
   "http://localhost:5000/api/v1/health-check" \
   "http://localhost:8000/api/v1/health-check" \
@@ -135,8 +144,15 @@ for url in \
     ok "$url"
   else
     warn "$url not responding"
+    all_ok=false
   fi
 done
+
+if $all_ok; then
+  ok "All services healthy"
+else
+  warn "Some services are not responding — check logs"
+fi
 
 echo ""
 log "${GREEN}Done!${NC}"
