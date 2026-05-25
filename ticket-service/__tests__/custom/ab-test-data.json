@@ -1,0 +1,9 @@
+{
+    "service_id": "url_shortener",
+    "metadata": {
+        "client_id": "postman_001",
+        "request_context": {
+            "reason": "SHORT_URL_GENERATION"
+        }
+    }
+}

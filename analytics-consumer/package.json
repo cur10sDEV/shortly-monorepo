@@ -1,0 +1,22 @@
+{
+  "name": "@cur10sdev/shortly-analytics-consumer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/src/index.js",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "kafkajs": "^2.2.4",
+    "@elastic/elasticsearch": "^8.17.1",
+    "ua-parser-js": "^2.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+
+    "typescript": "^5.7.2",
+    "tsx": "^4.19.0"
+  }
+}

@@ -1,0 +1,11 @@
+- [x] better auth integration
+- [x] init.sql script for db setup
+- [x] add auth protection to protected routes
+- [x] check auth integration with tanstack router
+- [x] add a default error handler for errors in handlers
+- [x] custom validation middleware to handle zValidator errors
+- [x] add argon2 encryption on passwords
+- [ ] add a .env.sample
+- [x] add route to get user links
+- [x] add keyset based pagination
+- [ ] add index on updated_at for get user links order by updated_at (last updated on first) - optional

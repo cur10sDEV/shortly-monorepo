@@ -1,0 +1,8 @@
+export const REQUEST_CONTEXT_REASONS = {
+  SHORT_URL_GENERATION: 'SHORT_URL_GENERATION',
+}
+
+export const NEXT_TICKET_BACTH_RANGE = {
+  min: 10,
+  max: 10000,
+}

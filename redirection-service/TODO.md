@@ -1,0 +1,5 @@
+- [ ] replace /api links in frontend code to /assets before deploy
+- [ ] add redis cache
+- [ ] cache invalidation in api service upon updating link data
+- [ ] add captcha verification for password page
+- [ ] harden security

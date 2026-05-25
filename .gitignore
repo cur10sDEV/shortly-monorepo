@@ -2,11 +2,3 @@
 .env
 .env.*
 !.env.sample
-
-# Independent service repos (each has its own git)
-frontend/
-api-service/
-redirection-service/
-ticket-service/
-base_62_encoder_decoder/
-analytics-consumer/

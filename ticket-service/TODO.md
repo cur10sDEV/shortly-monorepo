@@ -1,0 +1,4 @@
+- [x] Update Docker production files
+- [x] Eslint + Prettier
+- [x] lint-staged and husky
+- [ ] add auth
