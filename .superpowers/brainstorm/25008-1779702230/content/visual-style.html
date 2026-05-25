@@ -1,0 +1,26 @@
+<h2>Visual Style</h2>
+<p class="subtitle">The current shell has a dark theme. Keep it or go lighter?</p>
+
+<div class="options">
+  <div class="option" data-choice="dark" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Dark Theme (Keep Current)</h3>
+      <p>Dark backgrounds, light text, cyan/gray accents. Modern "developer" aesthetic. What's already scaffolded.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="light" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Light Theme</h3>
+      <p>Clean white/light backgrounds with dark text. Professional, SaaS-like. Blue/indigo accents.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="auto" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Dark + Light Mode Toggle</h3>
+      <p>Both themes, toggleable. Respects system preference by default. Takes more effort but users love it.</p>
+    </div>
+  </div>
+</div>

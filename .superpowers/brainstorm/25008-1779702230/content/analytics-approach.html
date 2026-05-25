@@ -1,0 +1,38 @@
+<h2>Analytics Pipeline — Architecture</h2>
+<p class="subtitle">Three approaches, different tradeoffs</p>
+
+<div class="options">
+  <div class="option" data-choice="integrated" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Recommended — Integrated + Async</h3>
+      <p>Redirection service records clicks to a <code>clicks</code> table fire-and-forget (doesn't block redirect). API service queries aggregated stats. Uses <code>ua-parser-js</code> + free GeoIP. Simple, no new services.</p>
+      <div class="pros-cons" style="margin-top: 8px">
+        <div class="pros"><h4>Pros</h4><ul><li>No new microservice</li><li>Leverages existing DB</li><li>Fast redirects</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>More write load on PG</li><li>GeoIP adds latency</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="event-driven" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Event-Driven (Redis Streams)</h3>
+      <p>Redirection service publishes click events to a Redis stream. A separate consumer processes batches (parse UA, geo, deduplicate) and writes to DB.</p>
+      <div class="pros-cons" style="margin-top: 8px">
+        <div class="pros"><h4>Pros</h4><ul><li>Redirects never blocked</li><li>Batch processing efficient</li><li>Resilient to consumer failure</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>New consumer service</li><li>Redis stream management</li><li>Eventual consistency</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="dedicated" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Dedicated Analytics Service</h3>
+      <p>New Hono service that receives click events via HTTP, processes them, and serves aggregated stats via API. Cleanest separation.</p>
+      <div class="pros-cons" style="margin-top: 8px">
+        <div class="pros"><h4>Pros</h4><ul><li>Clean separation</li><li>Can scale independently</li><li>Clear API boundary</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Another Docker service</li><li>HTTP overhead per click</li><li>More to maintain</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

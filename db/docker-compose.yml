@@ -1,0 +1,28 @@
+services:
+  shortly-main-db:
+    container_name: shortly-main-db-dev
+    image: postgres:18.1
+    restart: always
+    env_file: ../envs/.env.db
+    ports:
+      - "5432:5432"
+    volumes:
+      - shortly-main-db-pg-data:/var/lib/postgresql
+      # - ../scripts/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    network_mode: "host"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${DB_USER:-postgres}",
+          "-d",
+          "${DB_DATABASE:-shortly-main-db}",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  shortly-main-db-pg-data:

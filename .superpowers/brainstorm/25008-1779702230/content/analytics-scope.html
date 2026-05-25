@@ -1,0 +1,47 @@
+<h2>Link Analytics — What Stats?</h2>
+<p class="subtitle">What data do you want to see per link? (multi-select)</p>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="clicks-over-time" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>Clicks Over Time</h3>
+      <p>Line chart showing clicks per day/week/month. Ability to filter by date range.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="referrers" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>Referrers / Sources</h3>
+      <p>Where clicks are coming from (Twitter, LinkedIn, direct, etc.)</p>
+    </div>
+  </div>
+  <div class="option" data-choice="devices" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>Devices & Browsers</h3>
+      <p>Desktop vs mobile vs tablet. Chrome, Safari, Firefox breakdown.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="locations" onclick="toggleSelect(this)">
+    <div class="letter">4</div>
+    <div class="content">
+      <h3>Geographic Locations</h3>
+      <p>Country/city breakdown of where clicks originate.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="total-clicks" onclick="toggleSelect(this)">
+    <div class="letter">5</div>
+    <div class="content">
+      <h3>Total Clicks (Simple Counter)</h3>
+      <p>Just a total click count per link, no extra tracking. Simplest to implement.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="unique-clicks" onclick="toggleSelect(this)">
+    <div class="letter">6</div>
+    <div class="content">
+      <h3>Unique Click Tracking</h3>
+      <p>Deduplicate clicks by IP or fingerprint to show unique visitor counts.</p>
+    </div>
+  </div>
+</div>

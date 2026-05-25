@@ -1,0 +1,43 @@
+<h2>Full Design Overview</h2>
+<p class="subtitle" style="margin-bottom: 24px">Here's the complete picture before we dive into details. I'll walk through each section.</p>
+
+<div class="section">
+  <h3>1. Frontend Architecture</h3>
+  <ul>
+    <li><strong>Layout:</strong> Top bar (brand + user menu) + collapsible sidebar (nav links)</li>
+    <li><strong>Dark/Light:</strong> Toggle with system preference detection, persisted</li>
+    <li><strong>Pages:</strong> Dashboard, Login, Settings, Analytics (per-link)</li>
+    <li><strong>Create Link:</strong> Slide-over panel from dashboard</li>
+    <li><strong>Charts:</strong> Recharts library for analytics visualizations</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>2. Analytics Pipeline</h3>
+  <ul>
+    <li><strong>Tracking:</strong> Redirection service publishes click events to Redis Stream</li>
+    <li><strong>Processing:</strong> Dedicated consumer reads stream, parses UA, resolves geo, deduplicates</li>
+    <li><strong>Storage:</strong> New <code>clicks</code> table in PostgreSQL</li>
+    <li><strong>Query API:</strong> API service exposes aggregated stats endpoints</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>3. Data Model</h3>
+  <ul>
+    <li><code>clicks</code> table: id, link_id, timestamp, ip, user_agent, referrer, country, city, device_type, browser, is_unique</li>
+    <li>Aggregated via SQL queries with time-bucket grouping</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>4. Order of Implementation</h3>
+  <ol>
+    <li>Frontend: navigation layout + auth pages</li>
+    <li>Frontend: dashboard with link management (CRUD)</li>
+    <li>Analytics: clicks table + Redis stream publishing in redirection service</li>
+    <li>Analytics: consumer service + API endpoints</li>
+    <li>Frontend: analytics charts on the dashboard</li>
+    <li>Frontend: settings page</li>
+  </ol>
+</div>

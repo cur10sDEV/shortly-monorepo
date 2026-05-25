@@ -1,0 +1,33 @@
+<div class="section">
+  <h2>Section 4: Data Model — Clicks Table</h2>
+  <p class="subtitle">New table in PostgreSQL for analytics</p>
+
+  <div style="background: #1e1e2e; border-radius: 12px; padding: 20px; margin: 16px 0; font-family: monospace; font-size: 13px; line-height: 1.7">
+CREATE TABLE IF NOT EXISTS "clicks" (<br/>
+  &nbsp;&nbsp;"id" BIGSERIAL PRIMARY KEY,<br/>
+  &nbsp;&nbsp;"link_id" INTEGER NOT NULL REFERENCES "links"("id") ON DELETE CASCADE,<br/>
+  &nbsp;&nbsp;"timestamp" TIMESTAMPTZ NOT NULL DEFAULT now(),<br/>
+  &nbsp;&nbsp;"ip" VARCHAR(45),<br/>
+  &nbsp;&nbsp;"user_agent" TEXT,<br/>
+  &nbsp;&nbsp;"referrer" TEXT,<br/>
+  &nbsp;&nbsp;"country" VARCHAR(100),<br/>
+  &nbsp;&nbsp;"city" VARCHAR(100),<br/>
+  &nbsp;&nbsp;"browser" VARCHAR(50),<br/>
+  &nbsp;&nbsp;"os" VARCHAR(50),<br/>
+  &nbsp;&nbsp;"device_type" VARCHAR(20),<br/>
+  &nbsp;&nbsp;"is_unique" BOOLEAN DEFAULT true<br/>
+);<br/><br/>
+CREATE INDEX idx_clicks_link_id ON "clicks" ("link_id");<br/>
+CREATE INDEX idx_clicks_timestamp ON "clicks" ("timestamp");<br/>
+CREATE INDEX idx_clicks_link_timestamp ON "clicks" ("link_id", "timestamp");
+  </div>
+
+  <ul style="margin-top: 12px; line-height: 1.8">
+    <li><strong>link_id</strong> — FK to links table for JOIN queries</li>
+    <li><strong>ip</strong> — stored for dedup, not exposed to users</li>
+    <li><strong>country/city</strong> — resolved from IP at write time</li>
+    <li><strong>browser/os/device_type</strong> — parsed from user-agent at write time</li>
+    <li><strong>is_unique</strong> — if same IP + link_id within 1hr, marked false</li>
+    <li><strong>3 indexes</strong> — for common query patterns (by link, by time, by link+time)</li>
+  </ul>
+</div>
