@@ -15,6 +15,8 @@ ok()   { echo -e "${GREEN}  ✓ $1${NC}"; }
 warn() { echo -e "${YELLOW}  ⚠ $1${NC}"; }
 fail() { echo -e "${RED}  ✗ $1${NC}"; exit 1; }
 
+COMPOSE_FILES="-f docker-compose.yml -f docker-compose.dev.yml"
+
 # ─── Prerequisites ──────────────────────────────────────────────
 
 log "Checking prerequisites..."
@@ -35,7 +37,7 @@ cleanup() {
   local exit_code=$?
   if [ $exit_code -ne 0 ]; then
     echo ""
-    warn "Startup failed. Run ./stop.sh to clean up."
+    warn "Startup failed. Run ./dev-stop.sh to clean up."
   fi
   exit $exit_code
 }
@@ -59,7 +61,7 @@ ok "Ranges table ready"
 # ─── Start Infrastructure (Kafka + ES + Redis) ──────────────────
 
 log "Starting Kafka + Elasticsearch + Redis..."
-docker compose up -d shortly-kafka shortly-elasticsearch shortly-redis
+docker compose $COMPOSE_FILES up -d shortly-kafka shortly-elasticsearch shortly-redis
 
 log "Waiting for Redis (up to 30s)..."
 for i in $(seq 1 10); do
@@ -94,8 +96,8 @@ done
 
 # ─── Build and Start All Services ───────────────────────────────
 
-log "Building and starting all services..."
-docker compose up -d --build
+log "Building and starting all services (dev mode)..."
+docker compose $COMPOSE_FILES up -d --build
 
 # ─── Wait for services to be healthy ────────────────────────────
 
@@ -126,7 +128,7 @@ ok "Links table ready"
 
 echo ""
 log "=============================================="
-log "  Shortly is running!"
+log "  Shortly is running in DEV mode!"
 log "=============================================="
 echo ""
 echo -e "  ${CYAN}Frontend:${NC}          http://localhost:3000"
@@ -138,8 +140,9 @@ echo -e "  ${CYAN}Elasticsearch:${NC}     http://localhost:9200"
 echo -e "  ${CYAN}Redis:${NC}             redis://localhost:6379"
 echo -e "  ${CYAN}PostgreSQL:${NC}        localhost:5432"
 echo ""
-echo -e "  ${YELLOW}Logs:${NC}  docker compose logs -f <service-name>"
-echo -e "  ${YELLOW}Stop:${NC}  ./stop.sh"
+echo -e "  ${YELLOW}Logs:${NC}  docker compose $COMPOSE_FILES logs -f <service-name>"
+echo -e "  ${YELLOW}Stop:${NC}  ./dev-stop.sh"
+echo -e "  ${YELLOW}Hot reload:${NC} Edit source files — services restart automatically"
 echo ""
 
 # ─── Final health check ────────────────────────────────────────
@@ -173,4 +176,4 @@ else
 fi
 
 echo ""
-log "${GREEN}Done!${NC}"
+log "${GREEN}Dev environment ready!${NC}"

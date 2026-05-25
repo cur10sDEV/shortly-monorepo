@@ -1,4 +1,18 @@
 services:
+  shortly-redis:
+    container_name: shortly-redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - shortly-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   shortly-ticket-service:
     container_name: shortly-ticket-service-api-server-prod
     build:
@@ -156,3 +170,4 @@ services:
 volumes:
   shortly-kafka-data:
   shortly-es-data:
+  shortly-redis-data:

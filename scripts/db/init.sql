@@ -1,9 +1,12 @@
 -- RANGES TABLE (for ticket service — no external deps)
 BEGIN;
 
-CREATE TYPE IF NOT EXISTS "range_status" AS ENUM ('active', 'exhausted', 'not_active');
+DROP TABLE IF EXISTS "public"."ranges" CASCADE;
+DROP TYPE IF EXISTS "range_status";
 
-CREATE TABLE IF NOT EXISTS "public"."ranges" (
+CREATE TYPE "range_status" AS ENUM ('active', 'exhausted', 'not_active');
+
+CREATE TABLE "public"."ranges" (
 	"id" INTEGER PRIMARY KEY,
 	"start" BIGINT NOT NULL,
 	"end" BIGINT NOT NULL,
@@ -13,7 +16,7 @@ CREATE TABLE IF NOT EXISTS "public"."ranges" (
 	"updated_at" TIMESTAMP WITHOUT TIME ZONE DEFAULT now() NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS "index_status" ON "public"."ranges" USING btree("status" ASC NULLS LAST);
+CREATE INDEX "index_status" ON "public"."ranges" USING btree("status" ASC NULLS LAST);
 
 INSERT INTO "public"."ranges" VALUES
   (1, 1000000,10000000,1000000),

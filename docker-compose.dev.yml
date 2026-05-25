@@ -1,0 +1,53 @@
+# Dev overrides for docker-compose.yml
+# Use with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+services:
+  shortly-ticket-service:
+    container_name: shortly-ticket-service-api-server-dev
+    build:
+      context: ./ticket-service
+      dockerfile: ./docker/development/Dockerfile.dev
+    image: shortly-ticket-service-dev
+    volumes:
+      - ./ticket-service/src:/app/src
+
+  shortly-redirection-service:
+    container_name: shortly-redirection-service-api-server-dev
+    build:
+      context: ./redirection-service
+      dockerfile: ./docker/development/Dockerfile.dev
+    image: shortly-redirection-service-dev
+    volumes:
+      - ./redirection-service/src:/app/src
+
+  shortly-api-service:
+    container_name: shortly-api-service-dev
+    build:
+      context: ./api-service
+      dockerfile: ./docker/development/Dockerfile.dev
+    image: shortly-api-service-dev
+    volumes:
+      - ./api-service/src:/app/src
+    command: >
+      sh -c "
+      npx --yes @better-auth/cli generate --config ./src/api/v1/lib/auth.ts --yes &&
+      npx --yes @better-auth/cli migrate --config ./src/api/v1/lib/auth.ts --yes &&
+      npm run dev:docker
+      "
+
+  shortly-analytics-consumer:
+    container_name: shortly-analytics-consumer-dev
+    build:
+      context: ./analytics-consumer
+      dockerfile: Dockerfile.dev
+    image: shortly-analytics-consumer-dev
+    volumes:
+      - ./analytics-consumer/src:/app/src
+
+  shortly-frontend:
+    container_name: shortly-frontend-dev
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    image: shortly-frontend-dev
+    volumes:
+      - ./frontend/src:/app/src
