@@ -1,8 +1,13 @@
 import '@testing-library/jest-dom/vitest'
 
 // jsdom lacks matchMedia — needed by useTheme/motion utils
-if (!window.matchMedia) {
-  window.matchMedia = (query: string) => ({
+const jsdomWindow = window as Omit<Window, 'matchMedia' | 'ResizeObserver'> & {
+  matchMedia?: typeof window.matchMedia
+  ResizeObserver?: typeof ResizeObserver
+}
+
+if (!jsdomWindow.matchMedia) {
+  jsdomWindow.matchMedia = (query: string) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -14,8 +19,8 @@ if (!window.matchMedia) {
   })
 }
 
-if (!window.ResizeObserver) {
-  window.ResizeObserver = class ResizeObserver {
+if (!jsdomWindow.ResizeObserver) {
+  jsdomWindow.ResizeObserver = class ResizeObserver {
     observe() {}
     unobserve() {}
     disconnect() {}

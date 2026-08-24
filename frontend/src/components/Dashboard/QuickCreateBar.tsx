@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Link as LinkIcon } from 'lucide-react'
+import { Link as LinkIcon, Plus } from 'lucide-react'
 import { useCreateLink } from '../../hooks/useLinks'
 
 interface Props {

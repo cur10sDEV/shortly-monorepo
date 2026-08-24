@@ -1,7 +1,7 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { LayoutDashboard, Link as LinkIcon, BarChart3, Settings, LogOut } from 'lucide-react'
-import { useAuth } from '../../hooks/useAuth'
+import { BarChart3, LayoutDashboard, Link as LinkIcon, LogOut, Settings } from 'lucide-react'
 import { useState } from 'react'
+import { useAuth } from '../../hooks/useAuth'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -52,7 +52,7 @@ export function Sidebar() {
             <img src={user.image} alt="" className="w-7 h-7 rounded-full" />
           ) : (
             <div className="w-7 h-7 rounded-full bg-primary-600 flex items-center justify-center text-white text-xs font-semibold">
-              {user?.name?.charAt(0) || '?'}
+              {user?.name.charAt(0) || '?'}
             </div>
           )}
           <span className="text-sm text-slate-300 flex-1 text-left truncate">

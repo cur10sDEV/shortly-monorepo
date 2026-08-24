@@ -13,15 +13,15 @@ export function DeviceList({ data, isPending }: Props) {
   if (isPending) return <div className="space-y-3"><ShimmerBar /><ShimmerBar /></div>
   if (!data) return <p className="text-sm text-slate-500 py-8 text-center">No device data</p>
 
-  const browserMax = Math.max(...(data.browser?.map((b) => b.clicks) || [1]), 1)
-  const osMax = Math.max(...(data.os?.map((o) => o.clicks) || [1]), 1)
+  const browserMax = Math.max(...data.browser.map((b) => b.clicks), 1)
+  const osMax = Math.max(...data.os.map((o) => o.clicks), 1)
 
   return (
     <div className="space-y-4">
       <div>
         <h4 className="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Browser</h4>
         <div className="space-y-2">
-          {(data.browser || []).map((b, i) => (
+          {data.browser.map((b, i) => (
             <ProgressBar
               key={b.name}
               label={b.name}
@@ -35,7 +35,7 @@ export function DeviceList({ data, isPending }: Props) {
       <div>
         <h4 className="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Operating System</h4>
         <div className="space-y-2">
-          {(data.os || []).map((o, i) => (
+          {data.os.map((o, i) => (
             <ProgressBar
               key={o.name}
               label={o.name}

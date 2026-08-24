@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useAuth } from '../hooks/useAuth'
 import { Mail, ShieldCheck } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
 
 export const Route = createFileRoute('/settings')({
   component: SettingsPage,
@@ -19,7 +19,7 @@ function SettingsPage() {
             <img src={user.image} alt="" className="w-14 h-14 rounded-full ring-2 ring-slate-200 dark:ring-slate-700" />
           ) : (
             <div className="w-14 h-14 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 text-xl font-semibold">
-              {user?.name?.charAt(0) || '?'}
+              {user?.name.charAt(0) || '?'}
             </div>
           )}
           <div>

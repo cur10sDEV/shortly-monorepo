@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
-import { useAnalyticsSummary, useAnalyticsTimeline, useAnalyticsReferrers, useAnalyticsDevices, useAnalyticsLocations } from '../hooks/useAnalytics'
+import { useAnalyticsDevices, useAnalyticsLocations, useAnalyticsReferrers, useAnalyticsSummary, useAnalyticsTimeline } from '../hooks/useAnalytics'
 import { AnalyticsCards } from '../components/Dashboard/AnalyticsCards'
 import { TimelineChart } from '../components/Analytics/TimelineChart'
 import { ReferrerList } from '../components/Analytics/ReferrerList'

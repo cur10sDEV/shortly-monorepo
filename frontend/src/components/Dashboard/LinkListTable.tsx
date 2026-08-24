@@ -1,6 +1,6 @@
-import { Copy, BarChart3, Pencil, Trash2, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
-import type { Link } from '../../types'
+import { BarChart3, ChevronLeft, ChevronRight, Copy, ExternalLink, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
+import type { Link } from '../../types'
 
 interface Props {
   links: Link[]

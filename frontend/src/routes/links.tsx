@@ -13,7 +13,7 @@ export const Route = createFileRoute('/links')({
 
 function LinksPage() {
   const [cursor, setCursor] = useState<number | undefined>(undefined)
-  const [cursors, setCursors] = useState<Array<number>>([])
+  const [cursors, setCursors] = useState<number[]>([])
   const [panelOpen, setPanelOpen] = useState(false)
   const [editingLink, setEditingLink] = useState<Link | null>(null)
   const [deletingLink, setDeletingLink] = useState<Link | null>(null)

@@ -1,12 +1,12 @@
 import type {
-  ApiResponse,
-  Link,
-  PaginatedResponse,
   AnalyticsSummary,
-  TimelinePoint,
-  ReferrerStat,
+  ApiResponse,
   DeviceStat,
+  Link,
   LocationStat,
+  PaginatedResponse,
+  ReferrerStat,
+  TimelinePoint,
   UserOverview,
 } from '../types'
 

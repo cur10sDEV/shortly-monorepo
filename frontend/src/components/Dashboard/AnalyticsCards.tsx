@@ -1,4 +1,4 @@
-import { MousePointerClick, Users, CalendarClock, Clock } from 'lucide-react'
+import { CalendarClock, Clock, MousePointerClick, Users } from 'lucide-react'
 import type { AnalyticsSummary } from '../../types'
 
 interface Props {

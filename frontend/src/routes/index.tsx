@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Link as LinkIcon, MousePointerClick, CheckCircle } from 'lucide-react'
+import { CheckCircle, Link as LinkIcon, MousePointerClick } from 'lucide-react'
 import { CreateLinkPanel } from '../components/Dashboard/CreateLinkPanel'
 import { DeleteConfirmDialog } from '../components/Dashboard/DeleteConfirmDialog'
 import { LinkListTable } from '../components/Dashboard/LinkListTable'
@@ -14,7 +14,7 @@ export const Route = createFileRoute('/')({
 
 function DashboardPage() {
   const [cursor, setCursor] = useState<number | undefined>(undefined)
-  const [cursors, setCursors] = useState<Array<number>>([])
+  const [cursors, setCursors] = useState<number[]>([])
   const [panelOpen, setPanelOpen] = useState(false)
   const [editingLink, setEditingLink] = useState<Link | null>(null)
   const [deletingLink, setDeletingLink] = useState<Link | null>(null)
