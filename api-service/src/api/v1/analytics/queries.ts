@@ -191,17 +191,17 @@ const OVERVIEW_WINDOW_DAYS = 14
 const OVERVIEW_MAX_LINKS = 100
 
 function overviewWindow(): { days: string[]; min: string; max: string; gteIso: string } {
-  const startOfToday = new Date()
-  startOfToday.setHours(0, 0, 0, 0)
+  const now = new Date()
+  const utcMidnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
   const days: string[] = []
   for (let i = OVERVIEW_WINDOW_DAYS - 1; i >= 0; i--) {
-    days.push(new Date(startOfToday.getTime() - i * 86_400_000).toISOString().slice(0, 10))
+    days.push(new Date(utcMidnight.getTime() - i * 86_400_000).toISOString().slice(0, 10))
   }
   return {
     days,
     min: days[0],
     max: days[days.length - 1],
-    gteIso: new Date(startOfToday.getTime() - (OVERVIEW_WINDOW_DAYS - 1) * 86_400_000).toISOString(),
+    gteIso: new Date(utcMidnight.getTime() - (OVERVIEW_WINDOW_DAYS - 1) * 86_400_000).toISOString(),
   }
 }
 
@@ -210,6 +210,10 @@ export async function getOverviewClicks(
   linkIds: number[],
 ): Promise<IOverviewLinkClicks[]> {
   if (linkIds.length === 0) return []
+
+  if (linkIds.length > OVERVIEW_MAX_LINKS) {
+    throw new Error(`getOverviewClicks supports at most ${OVERVIEW_MAX_LINKS} links`)
+  }
 
   const window = overviewWindow()
 
