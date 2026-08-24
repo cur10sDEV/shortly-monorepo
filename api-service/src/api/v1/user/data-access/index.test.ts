@@ -49,5 +49,6 @@ describe('getUserOverviewLinks', () => {
     mockQuery.mockRejectedValue(new Error('boom'))
     const result = await getUserOverviewLinks('user-3')
     expect(result).toBeNull()
+    expect(mockRelease).toHaveBeenCalledOnce()
   })
 })

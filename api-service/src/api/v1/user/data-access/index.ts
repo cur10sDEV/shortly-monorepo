@@ -60,7 +60,7 @@ export const getUserOverviewLinks = async (
       name: 'user-overview-totals',
       text: `SELECT
                COUNT(*) FILTER (WHERE deleted_at IS NULL) AS total_links,
-               COUNT(*) FILTER (WHERE deleted_at IS NULL AND (expires_at IS NULL OR expires_at > now())) AS active_links
+               COUNT(*) FILTER (WHERE deleted_at IS NULL AND (expires_at IS NULL OR expires_at > now() AT TIME ZONE 'UTC')) AS active_links
              FROM links WHERE user_id = $1`,
       values: [user_id],
     })
