@@ -29,6 +29,12 @@ if (!jsdomWindow.ResizeObserver) {
   } as unknown as typeof ResizeObserver
 }
 
+// jsdom lacks scrollIntoView — needed by cmdk (CommandPalette)
+const jsdomElement = Element.prototype as Omit<Element, 'scrollIntoView'> & { scrollIntoView?: () => void }
+if (!jsdomElement.scrollIntoView) {
+  jsdomElement.scrollIntoView = () => {}
+}
+
 // jsdom lacks requestAnimationFrame — needed by animation components
 if (!jsdomWindow.requestAnimationFrame) {
   jsdomWindow.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(performance.now()), 16) as unknown as number
