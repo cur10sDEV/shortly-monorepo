@@ -42,3 +42,42 @@ export const getUserLinks = async (data: IGetUserLinks) => {
     client.release()
   }
 }
+
+const RECENT_LINKS_LIMIT = 100
+
+export interface IUserOverviewLinks {
+  total_links: number
+  active_links: number
+  recent_links: Array<{ id: number; short_code: string }>
+}
+
+export const getUserOverviewLinks = async (
+  user_id: string,
+): Promise<IUserOverviewLinks | null> => {
+  const client = await pool.connect()
+  try {
+    const totals = await client.query<{ total_links: string; active_links: string }>({
+      name: 'user-overview-totals',
+      text: `SELECT
+               COUNT(*) FILTER (WHERE deleted_at IS NULL) AS total_links,
+               COUNT(*) FILTER (WHERE deleted_at IS NULL AND (expires_at IS NULL OR expires_at > now())) AS active_links
+             FROM links WHERE user_id = $1`,
+      values: [user_id],
+    })
+    const recent = await client.query<{ id: number; short_code: string }>({
+      name: 'user-overview-recent',
+      text: 'SELECT id, short_code FROM links WHERE user_id = $1 AND deleted_at IS NULL ORDER BY id DESC LIMIT $2',
+      values: [user_id, RECENT_LINKS_LIMIT],
+    })
+    return {
+      total_links: Number(totals.rows[0]?.total_links ?? 0),
+      active_links: Number(totals.rows[0]?.active_links ?? 0),
+      recent_links: recent.rows,
+    }
+  } catch (error) {
+    logger.error('DB ERROR: getUserOverviewLinks', error)
+    return null
+  } finally {
+    client.release()
+  }
+}
