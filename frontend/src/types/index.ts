@@ -59,3 +59,21 @@ export interface LocationStat {
   city: string
   clicks: number
 }
+
+export interface OverviewTotals {
+  total_links: number
+  total_clicks: number
+  active_links: number
+}
+
+export interface OverviewLinkStat {
+  link_id: number
+  short_code: string
+  clicks_total: number
+  clicks_14d: number[]
+}
+
+export interface UserOverview {
+  totals: OverviewTotals
+  per_link: OverviewLinkStat[]
+}

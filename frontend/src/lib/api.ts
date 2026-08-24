@@ -7,6 +7,7 @@ import type {
   ReferrerStat,
   DeviceStat,
   LocationStat,
+  UserOverview,
 } from '../types'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
@@ -83,4 +84,5 @@ export const analyticsApi = {
     fetchApi<ApiResponse<LocationStat[]>>(
       `/links/${linkId}/analytics/locations`
     ),
+  overview: () => fetchApi<ApiResponse<UserOverview>>(`/user/analytics/overview`),
 }
