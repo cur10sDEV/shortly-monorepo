@@ -1,6 +1,8 @@
-import { useState } from 'react'
-import { Link as LinkIcon, Plus } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Plus } from 'lucide-react'
+import { toast } from 'sonner'
 import { useCreateLink } from '../../hooks/useLinks'
+import { celebrate } from '../ui/confetti'
 
 interface Props {
   onOpenPanel: () => void
@@ -8,44 +10,54 @@ interface Props {
 
 export function QuickCreateBar({ onOpenPanel }: Props) {
   const [url, setUrl] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
   const createLink = useCreateLink()
+
+  // ⌘K "Create new link" command focuses this input
+  useEffect(() => {
+    const onFocusCreate = () => inputRef.current?.focus()
+    window.addEventListener('shortly:focus-create', onFocusCreate)
+    return () => window.removeEventListener('shortly:focus-create', onFocusCreate)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!url.trim()) return
-    await createLink.mutateAsync({ long_url: url.trim() })
-    setUrl('')
+    try {
+      const result = await createLink.mutateAsync({ long_url: url.trim() })
+      celebrate(inputRef.current)
+      toast.success(`Short link created: /${result.data.short_code}`)
+      setUrl('')
+    } catch {
+      toast.error('Could not shorten that URL')
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 mb-6">
-      <div className="relative flex-1">
-        <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-        <input
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="Paste a long URL to shorten..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-shadow"
-        />
-      </div>
+    <form onSubmit={handleSubmit} className="flex gap-2 mb-6" aria-label="Quick create link">
+      <input
+        ref={inputRef}
+        type="url"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+        placeholder="https://paste-a-long-url.com…"
+        className="flex-1 px-4 py-2.5 rounded-[var(--radius-control)] border border-line-strong bg-surface text-ink text-sm placeholder:text-ink-faint outline-none focus:border-accent transition-colors"
+      />
       <button
         type="submit"
         disabled={!url.trim() || createLink.isPending}
-        className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        className="px-5 py-2.5 rounded-[var(--radius-control)] bg-ink text-white dark:text-[#1C1B18] dark:bg-[#EDEAE4] text-sm font-semibold hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        {createLink.isPending ? (
-          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-        ) : null}
         Shorten
       </button>
       <button
         type="button"
         onClick={onOpenPanel}
-        className="p-2.5 border border-dashed border-slate-300 dark:border-slate-600 rounded-lg hover:border-primary-400 hover:text-primary-500 text-slate-400 transition-colors"
-        title="Advanced options"
+        aria-label="More options (password, expiry)"
+        title="Password, expiry…"
+        className="px-3 rounded-[var(--radius-control)] border border-dashed border-line-strong hover:border-accent hover:text-accent text-ink-faint transition-colors"
       >
-        <Plus className="w-5 h-5" />
+        <Plus className="w-4.5 h-4.5" aria-hidden />
       </button>
     </form>
   )
