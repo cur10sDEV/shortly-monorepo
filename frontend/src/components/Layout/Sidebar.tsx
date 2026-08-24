@@ -2,6 +2,7 @@ import { Link, useLocation } from '@tanstack/react-router'
 import { BarChart3, LayoutDashboard, Link as LinkIcon, LogOut, Settings } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
+import { ThemeToggle } from './ThemeToggle'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -16,63 +17,72 @@ export function Sidebar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   return (
-    <aside className="w-[var(--sidebar-width)] h-screen sticky top-0 bg-slate-900 dark:bg-slate-950 border-r border-slate-800 dark:border-slate-800 flex flex-col">
-      <div className="p-5 border-b border-slate-800">
-        <span className="text-lg font-bold text-white tracking-tight">shortly</span>
+    <aside className="w-[var(--sidebar-width)] h-screen sticky top-0 bg-surface-muted border-r border-line flex flex-col">
+      <div className="px-5 pt-5 pb-4 border-b border-line">
+        <Link to="/" className="flex items-center gap-2 group" aria-label="Shortly home">
+          <span className="w-6 h-6 rounded-md bg-ink text-canvas grid place-items-center font-display font-bold text-sm group-hover:rotate-6 transition-transform">s</span>
+          <span className="font-display text-base font-bold tracking-tight text-ink">shortly<span className="text-accent">*</span></span>
+        </Link>
       </div>
-      <nav className="flex-1 p-3 flex flex-col gap-1">
+
+      <nav className="flex-1 p-3 flex flex-col gap-1" aria-label="Primary">
         {navItems.map((item) => {
           const Icon = item.icon
-          const isActive =
-            item.to === '/'
-              ? location.pathname === '/'
-              : location.pathname.startsWith(item.to)
+          const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to)
           return (
             <Link
               key={item.to}
               to={item.to}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+              aria-current={isActive ? 'page' : undefined}
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-full text-[13px] font-medium transition-colors ${
                 isActive
-                  ? 'bg-primary-600/15 text-primary-400'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                  ? 'bg-accent-soft text-accent'
+                  : 'text-ink-muted hover:text-ink hover:bg-surface'
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-4 h-4" aria-hidden />
               {item.label}
             </Link>
           )
         })}
       </nav>
-      <div className="p-3 border-t border-slate-800 relative">
-        <button
-          onClick={() => setUserMenuOpen(!userMenuOpen)}
-          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-slate-800/50 transition-colors"
-        >
-          {user?.image ? (
-            <img src={user.image} alt="" className="w-7 h-7 rounded-full" />
-          ) : (
-            <div className="w-7 h-7 rounded-full bg-primary-600 flex items-center justify-center text-white text-xs font-semibold">
-              {user?.name.charAt(0) || '?'}
-            </div>
+
+      <div className="p-3 border-t border-line space-y-1">
+        <div className="flex items-center justify-between px-2 py-1">
+          <span className="font-mono text-[10px] text-ink-faint select-none">v1 · self-hosted</span>
+          <ThemeToggle />
+        </div>
+        <div className="relative">
+          <button
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            aria-haspopup="menu"
+            aria-expanded={userMenuOpen}
+            className="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-xl hover:bg-surface transition-colors"
+          >
+            {user?.image ? (
+              <img src={user.image} alt="" className="w-7 h-7 rounded-full" />
+            ) : (
+              <div className="w-7 h-7 rounded-full bg-accent grid place-items-center text-white text-xs font-semibold">
+                {user?.name.charAt(0) || '?'}
+              </div>
+            )}
+            <span className="text-[13px] text-ink flex-1 text-left truncate">{user?.name || 'User'}</span>
+          </button>
+          {userMenuOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} aria-hidden />
+              <div role="menu" className="absolute bottom-full left-0 right-0 mb-2 bg-surface rounded-xl border border-line shadow-[var(--shadow-overlay)] z-20 overflow-hidden animate-rise">
+                <p className="px-3 pt-2.5 pb-1 text-[11px] text-ink-faint truncate">{user?.email}</p>
+                <button
+                  onClick={() => { signOut(); setUserMenuOpen(false) }}
+                  className="w-full px-3 py-2.5 text-left text-[13px] text-danger hover:bg-danger-soft flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" aria-hidden /> Sign out
+                </button>
+              </div>
+            </>
           )}
-          <span className="text-sm text-slate-300 flex-1 text-left truncate">
-            {user?.name || 'User'}
-          </span>
-        </button>
-        {userMenuOpen && (
-          <>
-            <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} />
-            <div className="absolute bottom-full left-3 right-3 mb-2 bg-slate-800 rounded-lg border border-slate-700 shadow-xl z-20">
-              <button
-                onClick={() => { signOut(); setUserMenuOpen(false) }}
-                className="w-full px-3 py-2.5 text-left text-sm text-red-400 hover:bg-slate-700 rounded-lg flex items-center gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </button>
-            </div>
-          </>
-        )}
+        </div>
       </div>
     </aside>
   )
