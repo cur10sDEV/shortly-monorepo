@@ -2,3 +2,6 @@
 .env
 .env.*
 !.env.sample
+
+# brainstorming companion
+.superpowers/
