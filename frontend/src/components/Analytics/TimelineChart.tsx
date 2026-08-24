@@ -13,8 +13,9 @@ export function TimelineChart({ data }: Props) {
   if (!data || data.length === 0) return <p className="text-sm text-ink-faint py-12 text-center">No data yet</p>
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <ComposedChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
+    <div role="img" aria-label="Clicks over time chart">
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
         <defs>
           <linearGradient id="timelineFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="var(--paper-accent)" stopOpacity={0.22} />
@@ -59,5 +60,6 @@ export function TimelineChart({ data }: Props) {
         />
       </ComposedChart>
     </ResponsiveContainer>
+    </div>
   )
 }

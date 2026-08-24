@@ -77,9 +77,10 @@ export function CreateLinkPanel({ isOpen, onClose, editLink }: Props) {
           </h2>
           <button
             onClick={onClose}
+            aria-label="Close panel"
             className="p-1.5 rounded-lg hover:bg-surface-muted text-ink-muted"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 flex-1">

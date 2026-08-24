@@ -18,7 +18,7 @@ export function StatTile({ icon: Icon, label, value, delta = null, loading = fal
       </div>
       <div className="flex items-baseline gap-2">
         {loading ? (
-          <span className="inline-block h-6 w-20 rounded-md shimmer" aria-label={`loading ${label}`} />
+          <span className="inline-block h-6 w-20 rounded-md shimmer" role="status" aria-label={`loading ${label}`} />
         ) : (
           <>
             <CountUp value={value} className="font-display text-2xl font-bold text-ink" />
@@ -28,7 +28,7 @@ export function StatTile({ icon: Icon, label, value, delta = null, loading = fal
                   delta.positive ? 'bg-green-soft text-green' : 'bg-danger-soft text-danger'
                 }`}
               >
-                {delta.positive ? '▲' : '▼'} {delta.value}
+                <span aria-hidden>{delta.positive ? '▲' : '▼'}</span> {delta.value}
               </span>
             )}
           </>

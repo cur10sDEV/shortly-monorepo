@@ -11,6 +11,7 @@ import { Skeleton } from '../components/ui/Skeleton'
 import { useDeleteLink, useLinks } from '../hooks/useLinks'
 import { useOverview } from '../hooks/useOverview'
 import { useAuth } from '../hooks/useAuth'
+import { prefersReducedMotion } from '../lib/motion'
 import type { Link, OverviewLinkStat } from '../types'
 
 export const Route = createFileRoute('/')({
@@ -120,7 +121,7 @@ function DashboardPage() {
                     <stop offset="100%" stopColor="var(--paper-accent)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <Area type="monotone" dataKey="clicks" stroke="var(--paper-accent)" strokeWidth={2} fill="url(#dashFill)" isAnimationActive={!window.matchMedia('(prefers-reduced-motion: reduce)').matches} animationDuration={600} />
+                <Area type="monotone" dataKey="clicks" stroke="var(--paper-accent)" strokeWidth={2} fill="url(#dashFill)" isAnimationActive={!prefersReducedMotion()} animationDuration={600} />
               </AreaChart>
             </ResponsiveContainer>
           )}
