@@ -4,6 +4,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { BarChart3, Copy, LayoutDashboard, Link as LinkIcon, Plus, Settings, SunMoon } from 'lucide-react'
 import { toast } from 'sonner'
 import { useLinks } from '../../hooks/useLinks'
+import { useTheme } from '../../hooks/useTheme'
 import { copyToClipboard } from '../../lib/clipboard'
 import type { ReactNode } from 'react'
 
@@ -25,6 +26,7 @@ export function CommandPalette({ open, onOpenChange, onNavigate }: Props) {
   const go = onNavigate ?? ((path: string) => navigate({ to: path }))
   const { data } = useLinks()
   const links = data?.data ?? []
+  const { theme: choice, setTheme } = useTheme()
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -41,6 +43,19 @@ export function CommandPalette({ open, onOpenChange, onNavigate }: Props) {
     go('/')
     onOpenChange(false)
     requestAnimationFrame(() => window.dispatchEvent(new CustomEvent('shortly:focus-create')))
+  }
+
+  const handleToggleTheme = () => {
+    const next =
+      choice === 'system'
+        ? window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'light'
+          : 'dark'
+        : choice === 'dark'
+          ? 'light'
+          : 'dark'
+    setTheme(next)
+    onOpenChange(false)
   }
 
   const handleCopyLink = async (url: string) => {
@@ -76,7 +91,7 @@ export function CommandPalette({ open, onOpenChange, onNavigate }: Props) {
           <Item onSelect={() => { handleCopyLink(links[0]?.short_url ?? '') }} disabled={links.length === 0}>
             <Copy className="h-4 w-4" aria-hidden /> Copy most recent link
           </Item>
-          <Item onSelect={() => { document.documentElement.classList.toggle('dark'); onOpenChange(false) }}>
+          <Item onSelect={handleToggleTheme}>
             <SunMoon className="h-4 w-4" aria-hidden /> Toggle theme
             <Shortcut>T</Shortcut>
           </Item>
