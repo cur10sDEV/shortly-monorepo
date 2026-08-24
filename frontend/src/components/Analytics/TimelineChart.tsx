@@ -1,4 +1,5 @@
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { prefersReducedMotion } from '../../lib/motion'
 import type { TimelinePoint } from '../../types'
 
 interface Props {
@@ -6,14 +7,13 @@ interface Props {
 }
 
 const TICK_STYLE = { fontSize: 11, fontFamily: 'JetBrains Mono', fill: 'var(--paper-ink-faint)' }
-const REDUCED_MOTION =
-  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+const REDUCED = prefersReducedMotion()
 
 export function TimelineChart({ data }: Props) {
   if (!data || data.length === 0) return <p className="text-sm text-ink-faint py-12 text-center">No data yet</p>
 
   return (
-    <div role="img" aria-label="Clicks over time chart">
+    <div role="img" aria-label="Clicks over time chart" className="h-full w-full">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
         <defs>
@@ -45,7 +45,7 @@ export function TimelineChart({ data }: Props) {
           fill="url(#timelineFill)"
           dot={false}
           activeDot={{ r: 5 }}
-          isAnimationActive={!REDUCED_MOTION}
+          isAnimationActive={!REDUCED}
           animationDuration={600}
         />
         <Line
@@ -55,7 +55,7 @@ export function TimelineChart({ data }: Props) {
           strokeWidth={2}
           dot={false}
           activeDot={{ r: 5 }}
-          isAnimationActive={!REDUCED_MOTION}
+          isAnimationActive={!REDUCED}
           animationDuration={600}
         />
       </ComposedChart>
