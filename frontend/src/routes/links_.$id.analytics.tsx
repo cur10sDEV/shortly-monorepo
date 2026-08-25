@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Activity, ArrowLeft, CalendarClock, Copy, MousePointerClick, Users } from 'lucide-react'
 import { useAnalyticsDevices, useAnalyticsLocations, useAnalyticsReferrers, useAnalyticsSummary, useAnalyticsTimeline } from '../hooks/useAnalytics'
 import { copyWithToast } from '../lib/clipboard'
+import { rangeStartIso } from '../lib/analyticsRange'
 import { QRPopover } from '../components/ui/QRPopover'
 import { StatTile } from '../components/ui/StatTile'
 import { Skeleton } from '../components/ui/Skeleton'
@@ -27,12 +28,6 @@ function shortUrl(id: string): string {
   return window.location.origin.replace(/:\d+$/, ':8000') + '/' + id
 }
 
-function isoDaysAgo(days: number): string {
-  const d = new Date()
-  d.setDate(d.getDate() - days)
-  return d.toISOString()
-}
-
 function relativeTime(iso: string | null): string {
   if (!iso) return '—'
   const diff = Date.now() - new Date(iso).getTime()
@@ -55,9 +50,15 @@ function LinkAnalyticsPage() {
   const navigate = useNavigate()
   const [rangeIdx, setRangeIdx] = useState(0)
   const range = RANGES[rangeIdx]
+  // Quantized to a UTC day boundary and memoized so the query key stays stable
+  // across re-renders (an unstable key caused an infinite refetch loop).
+  const timelineParams = useMemo(
+    () => ({ bucket: range.bucket, from: rangeStartIso(range.days) }),
+    [range.bucket, range.days],
+  )
 
   const summary = useAnalyticsSummary(linkId)
-  const timeline = useAnalyticsTimeline(linkId, { bucket: range.bucket, from: isoDaysAgo(range.days) })
+  const timeline = useAnalyticsTimeline(linkId, timelineParams)
   const referrers = useAnalyticsReferrers(linkId)
   const devices = useAnalyticsDevices(linkId)
   const locations = useAnalyticsLocations(linkId)
