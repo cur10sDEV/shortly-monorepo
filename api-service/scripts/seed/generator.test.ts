@@ -177,6 +177,7 @@ describe('generateClickDocs', () => {
       expect(link).toBeDefined()
       const t = new Date(d.timestamp).getTime()
       expect(t).toBeGreaterThanOrEqual(link.created_at.getTime())
+      expect(t).toBeLessThanOrEqual(NOW.getTime())
       const dead = link.deleted_at ?? link.expires_at
       if (dead) expect(t).toBeLessThan(dead.getTime())
     }
