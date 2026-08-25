@@ -110,6 +110,16 @@ describe('dailyRate', () => {
     expect(Math.abs(peakDay - expectedPeak)).toBeLessThanOrEqual(totalDays * 0.15)
   })
 
+  it('growing is strictly increasing across the full window', () => {
+    const totalDays = 90
+    let prev = dailyRate('growing', 0, totalDays, 3)
+    for (let d = 1; d < totalDays; d++) {
+      const r = dailyRate('growing', d, totalDays, 3)
+      expect(r).toBeGreaterThan(prev)
+      prev = r
+    }
+  })
+
   it('decaying is strictly decreasing over the first half', () => {
     const totalDays = 90
     let prev = dailyRate('decaying', 0, totalDays, 3)
