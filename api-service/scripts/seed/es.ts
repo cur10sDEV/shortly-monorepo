@@ -3,7 +3,13 @@ import { Client } from '@elastic/elasticsearch'
 import { indexNameFor, type SeedClickDoc } from './generator.js'
 
 export function createEsClient(node: string): Client {
-  return new Client({ node })
+  return new Client({
+    node,
+    headers: {
+      accept: 'application/vnd.elasticsearch+json; compatible-with=8',
+      'content-type': 'application/vnd.elasticsearch+json; compatible-with=8',
+    },
+  })
 }
 
 export async function wipeSeedDocs(client: Client, prefix: string): Promise<number> {
