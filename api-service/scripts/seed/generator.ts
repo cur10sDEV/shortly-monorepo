@@ -101,7 +101,10 @@ export function generateLinks(rand: () => number, count: number, now: Date): See
     } while (usedCodes.has(code))
     usedCodes.add(code)
 
-    const ageDays = 2 + Math.floor(rand() * 84)
+    // Special states must die AFTER they are created, so clamp their minimum age.
+    let ageDays = 2 + Math.floor(rand() * 84)
+    if (state === 'expired') ageDays = Math.max(ageDays, 6)
+    else if (state === 'deleted') ageDays = Math.max(ageDays, 3)
     const created = new Date(now.getTime() - ageDays * DAY)
 
     links.push({
@@ -131,32 +134,61 @@ export const REFERRER_POOL = [
 ] as const
 const REFERRER_WEIGHTS = [0.35, 0.2, 0.2, 0.15, 0.1]
 
-export const UA_POOL = [
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1',
-  'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0',
-  'Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36 SamsungBrowser/26.0',
-  'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.127 Mobile Safari/537.36',
-  'Mozilla/5.0 (iPad; CPU OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1',
+// One entry per client so browser/os/device_type can never drift out of sync
+// with the UA string. Derivation matches ua-parser
+// (analytics-consumer/src/lib/parser.ts).
+export const CLIENT_POOL = [
+  {
+    ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+    browser: 'Chrome',
+    os: 'Windows',
+    device_type: 'desktop',
+  },
+  {
+    ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
+    browser: 'Chrome',
+    os: 'Mac OS',
+    device_type: 'desktop',
+  },
+  {
+    ua: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1',
+    browser: 'Safari',
+    os: 'iOS',
+    device_type: 'mobile',
+  },
+  {
+    ua: 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0',
+    browser: 'Firefox',
+    os: 'Ubuntu',
+    device_type: 'desktop',
+  },
+  {
+    ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0',
+    browser: 'Edge',
+    os: 'Windows',
+    device_type: 'desktop',
+  },
+  {
+    ua: 'Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36 SamsungBrowser/26.0',
+    browser: 'Samsung Internet',
+    os: 'Android',
+    device_type: 'mobile',
+  },
+  {
+    ua: 'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.127 Mobile Safari/537.36',
+    browser: 'Chrome Mobile',
+    os: 'Android',
+    device_type: 'mobile',
+  },
+  {
+    ua: 'Mozilla/5.0 (iPad; CPU OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1',
+    browser: 'Safari',
+    os: 'iOS',
+    device_type: 'tablet',
+  },
 ] as const
 
-// device_type/browser/os are derived from the chosen UA the same way
-// ua-parser (analytics-consumer/src/lib/parser.ts) derives them.
-function deriveClient(uaIndex: number): { browser: string; os: string; device_type: string } {
-  const table = [
-    { browser: 'Chrome', os: 'Windows', device_type: 'desktop' },
-    { browser: 'Chrome', os: 'Mac OS', device_type: 'desktop' },
-    { browser: 'Safari', os: 'iOS', device_type: 'mobile' },
-    { browser: 'Firefox', os: 'Ubuntu', device_type: 'desktop' },
-    { browser: 'Edge', os: 'Windows', device_type: 'desktop' },
-    { browser: 'Samsung Internet', os: 'Android', device_type: 'mobile' },
-    { browser: 'Chrome Mobile', os: 'Android', device_type: 'mobile' },
-    { browser: 'Safari', os: 'iOS', device_type: 'tablet' },
-  ]
-  return table[uaIndex]
-}
+export const UA_POOL = CLIENT_POOL.map((c) => c.ua)
 
 export const GEO_PAIRS = [
   { country: 'United States', city: 'San Francisco' },
@@ -182,8 +214,9 @@ function pickWeighted<T>(items: readonly T[], weights: readonly number[], r: num
 const HOUR_WEIGHTS = [
   1, 1, 1, 1, 1, 2, 3, 5, 8, 10, 10, 9, 8, 8, 8, 8, 7, 6, 5, 5, 4, 3, 2, 1,
 ]
+const HOUR_WEIGHTS_TOTAL = HOUR_WEIGHTS.reduce((a, b) => a + b, 0)
 
-function dailyRate(archetype: Archetype, dayIndex: number, totalDays: number, dow: number): number {
+export function dailyRate(archetype: Archetype, dayIndex: number, totalDays: number, dow: number): number {
   switch (archetype) {
     case 'steady':
       return 18
@@ -221,7 +254,7 @@ export function generateClickDocs(
     const linkId = startId + i
     const end = link.deleted_at ?? link.expires_at ?? now
     const windowStart = Math.max(link.created_at.getTime(), now.getTime() - days * DAY)
-    const windowEnd = Math.min(end.getTime(), now.getTime()) - (end.getTime() >= now.getTime() ? 0 : 0)
+    const windowEnd = Math.min(end.getTime(), now.getTime())
     if (windowEnd <= windowStart) return
 
     const startDay = Math.ceil(windowStart / DAY) * DAY
@@ -242,7 +275,7 @@ export function generateClickDocs(
       for (let c = 0; c < clicks; c++) {
         // timestamp: day + weighted hour + random minute/second
         let hourAcc = 0
-        const hr = rand() * HOUR_WEIGHTS.reduce((a, b) => a + b, 0)
+        const hr = rand() * HOUR_WEIGHTS_TOTAL
         let hour = 0
         for (let h = 0; h < 24; h++) {
           hourAcc += HOUR_WEIGHTS[h]
@@ -273,14 +306,13 @@ export function generateClickDocs(
           geoByIp.set(ip, GEO_PAIRS[Math.floor(rand() * GEO_PAIRS.length)])
         }
         const geo = geoByIp.get(ip)!
-        const uaIndex = Math.floor(rand() * UA_POOL.length)
-        const client = deriveClient(uaIndex)
+        const client = CLIENT_POOL[Math.floor(rand() * CLIENT_POOL.length)]
 
         docs.push({
           link_id: linkId,
           link_owner_id: ownerId,
           ip,
-          user_agent: UA_POOL[uaIndex],
+          user_agent: client.ua,
           referrer: pickWeighted(REFERRER_POOL, REFERRER_WEIGHTS, rand()),
           timestamp: ts.toISOString(),
           country: geo.country,

@@ -1,6 +1,7 @@
 // api-service/scripts/seed/generator.test.ts
 import { describe, expect, it } from 'vitest'
 import {
+  dailyRate,
   generateClickDocs,
   generateLinks,
   indexNameFor,
@@ -17,6 +18,15 @@ describe('mulberry32', () => {
     const a = mulberry32(42)
     const b = mulberry32(42)
     for (let i = 0; i < 100; i++) expect(a()).toBe(b())
+  })
+
+  it('matches known reference values for seed 42', () => {
+    const g = mulberry32(42)
+    expect(g()).toBe(0.6011037519201636)
+    expect(g()).toBe(0.44829055899754167)
+    expect(g()).toBe(0.8524657934904099)
+    expect(g()).toBe(0.6697340414393693)
+    expect(g()).toBe(0.17481389874592423)
   })
 })
 
@@ -58,6 +68,15 @@ describe('generateLinks', () => {
       }
     }
   })
+
+  it('never sets expiry/deletion at or before creation', () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      for (const l of generateLinks(mulberry32(seed), 15, NOW)) {
+        expect(l.expires_at === null || l.expires_at.getTime() > l.created_at.getTime()).toBe(true)
+        expect(l.deleted_at === null || l.deleted_at.getTime() > l.created_at.getTime()).toBe(true)
+      }
+    }
+  })
 })
 
 describe('indexNameFor', () => {
@@ -65,6 +84,45 @@ describe('indexNameFor', () => {
     expect(indexNameFor(new Date('2026-03-05T23:59:59Z'), 'clicks')).toBe('clicks-2026.03.05')
     expect(indexNameFor(new Date('2026-01-01T00:00:00Z'), 'shortly-clicks')).toBe(
       'shortly-clicks-2026.01.01',
+    )
+  })
+})
+
+describe('dailyRate', () => {
+  it('steady is constant regardless of day or weekday', () => {
+    for (let d = 0; d < 30; d++) {
+      expect(dailyRate('steady', d, 30, d % 7)).toBe(18)
+    }
+  })
+
+  it('viral-spike peaks within ±15% of 0.6 * totalDays', () => {
+    const totalDays = 60
+    let peakDay = 0
+    let peakRate = -Infinity
+    for (let d = 0; d < totalDays; d++) {
+      const r = dailyRate('viral-spike', d, totalDays, 3)
+      if (r > peakRate) {
+        peakRate = r
+        peakDay = d
+      }
+    }
+    const expectedPeak = totalDays * 0.6
+    expect(Math.abs(peakDay - expectedPeak)).toBeLessThanOrEqual(totalDays * 0.15)
+  })
+
+  it('decaying is strictly decreasing over the first half', () => {
+    const totalDays = 90
+    let prev = dailyRate('decaying', 0, totalDays, 3)
+    for (let d = 1; d <= Math.floor(totalDays / 2); d++) {
+      const r = dailyRate('decaying', d, totalDays, 3)
+      expect(r).toBeLessThan(prev)
+      prev = r
+    }
+  })
+
+  it('weekend-heavy rates Saturday above Monday', () => {
+    expect(dailyRate('weekend-heavy', 5, 30, 6)).toBeGreaterThan(
+      dailyRate('weekend-heavy', 5, 30, 1),
     )
   })
 })
@@ -103,7 +161,6 @@ describe('generateClickDocs', () => {
   })
 
   it('never emits clicks before a link was created or after it died', () => {
-    const byCode = new Map(links.map((l) => [l.short_code, l]))
     // docs carry link_id which equals the index of the link in the array +1 (mirrors SERIAL ids)
     for (const d of docs) {
       const link = links[d.link_id - 1]
@@ -111,9 +168,8 @@ describe('generateClickDocs', () => {
       const t = new Date(d.timestamp).getTime()
       expect(t).toBeGreaterThanOrEqual(link.created_at.getTime())
       const dead = link.deleted_at ?? link.expires_at
-      if (dead && link.state !== 'expiring_soon') expect(t).toBeLessThan(dead.getTime())
+      if (dead) expect(t).toBeLessThan(dead.getTime())
     }
-    void byCode
   })
 
   it('keeps is_unique between 55% and 75%', () => {
@@ -137,8 +193,6 @@ describe('generateClickDocs', () => {
 
   it('is deterministic for the same seed', () => {
     const again = generateClickDocs(mulberry32(9), links, OWNER, 90, NOW)
-    expect(again.length).toBe(docs.length)
-    expect(again[0]).toEqual(docs[0])
-    expect(again[docs.length - 1]).toEqual(docs[docs.length - 1])
+    expect(again).toEqual(docs)
   })
 })
