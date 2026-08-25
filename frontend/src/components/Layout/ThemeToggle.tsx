@@ -1,33 +1,24 @@
-import { useEffect, useState } from 'react'
-import { Sun, Moon } from 'lucide-react'
+import { Monitor, Moon, Sun } from 'lucide-react'
+import { useTheme } from '../../hooks/useTheme'
+import type { ThemeChoice } from '../../hooks/useTheme'
 
-type Theme = 'dark' | 'light'
+const ORDER: ThemeChoice[] = ['light', 'dark', 'system']
+const ICONS = { light: Sun, dark: Moon, system: Monitor } as const
+const LABELS = { light: 'Light theme', dark: 'Dark theme', system: 'System theme (current)' } as const
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>(() => {
-    const stored = localStorage.getItem('theme')
-    if (stored === 'light' || stored === 'dark') return stored
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light'
-  })
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
-    localStorage.setItem('theme', theme)
-  }, [theme])
+  const { theme, setTheme } = useTheme()
+  const next = ORDER[(ORDER.indexOf(theme) + 1) % ORDER.length]
+  const Icon = ICONS[theme]
 
   return (
     <button
-      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-      aria-label="Toggle theme"
+      onClick={() => setTheme(next)}
+      aria-label={`Theme: ${LABELS[theme]}. Switch to ${next}.`}
+      title={LABELS[theme]}
+      className="p-2 rounded-lg hover:bg-surface-muted text-ink-muted transition-colors"
     >
-      {theme === 'dark' ? (
-        <Sun className="w-5 h-5 text-gray-300" />
-      ) : (
-        <Moon className="w-5 h-5 text-gray-600" />
-      )}
+      <Icon className="w-4 h-4" aria-hidden />
     </button>
   )
 }

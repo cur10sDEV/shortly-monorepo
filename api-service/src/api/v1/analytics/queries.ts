@@ -180,3 +180,115 @@ export async function getLocations(linkId: number, linkOwnerId: string, from?: s
   }
   return result2
 }
+
+export interface IOverviewLinkClicks {
+  link_id: number
+  clicks_total: number
+  clicks_14d: number[]
+}
+
+const OVERVIEW_WINDOW_DAYS = 14
+const OVERVIEW_MAX_LINKS = 100
+
+function overviewWindow(): { days: string[]; min: string; max: string; gteIso: string } {
+  const now = new Date()
+  const utcMidnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+  const days: string[] = []
+  for (let i = OVERVIEW_WINDOW_DAYS - 1; i >= 0; i--) {
+    days.push(new Date(utcMidnight.getTime() - i * 86_400_000).toISOString().slice(0, 10))
+  }
+  return {
+    days,
+    min: days[0],
+    max: days[days.length - 1],
+    gteIso: new Date(utcMidnight.getTime() - (OVERVIEW_WINDOW_DAYS - 1) * 86_400_000).toISOString(),
+  }
+}
+
+export async function getOverviewClicks(
+  linkOwnerId: string,
+  linkIds: number[],
+): Promise<IOverviewLinkClicks[]> {
+  if (linkIds.length === 0) return []
+
+  if (linkIds.length > OVERVIEW_MAX_LINKS) {
+    throw new Error(`getOverviewClicks supports at most ${OVERVIEW_MAX_LINKS} links`)
+  }
+
+  const window = overviewWindow()
+
+  const result = await esClient.search({
+    index: getIndices(),
+    size: 0,
+    query: { match_all: {} },
+    aggs: {
+      by_link_series: {
+        filter: {
+          bool: {
+            filter: [
+              { term: { 'link_owner_id.keyword': linkOwnerId } },
+              { terms: { link_id: linkIds } },
+              { range: { timestamp: { gte: window.gteIso } } },
+            ],
+          },
+        },
+        aggs: {
+          inner: {
+            terms: { field: 'link_id', size: OVERVIEW_MAX_LINKS },
+            aggs: {
+              series: {
+                date_histogram: {
+                  field: 'timestamp',
+                  calendar_interval: 'day',
+                  format: 'yyyy-MM-dd',
+                  min_doc_count: 0,
+                  extended_bounds: { min: window.min, max: window.max },
+                  time_zone: '+00:00',
+                },
+              },
+            },
+          },
+        },
+      },
+      by_link_total: {
+        filter: {
+          bool: {
+            filter: [
+              { term: { 'link_owner_id.keyword': linkOwnerId } },
+              { terms: { link_id: linkIds } },
+            ],
+          },
+        },
+        aggs: { inner: { terms: { field: 'link_id', size: OVERVIEW_MAX_LINKS } } },
+      },
+    },
+  })
+
+  type SeriesBucket = { key_as_string: string; doc_count: number }
+  type LinkBucket = { key: number; doc_count: number; series?: { buckets: SeriesBucket[] } }
+  type OverviewAggs = {
+    by_link_series?: { inner?: { buckets?: LinkBucket[] } }
+    by_link_total?: { inner?: { buckets?: LinkBucket[] } }
+  }
+
+  const aggs = (result.aggregations ?? {}) as OverviewAggs
+
+  const seriesByLink = new Map<number, SeriesBucket[]>()
+  for (const b of aggs.by_link_series?.inner?.buckets ?? []) {
+    if (b.series?.buckets) seriesByLink.set(b.key, b.series.buckets)
+  }
+  const totalsByLink = new Map<number, number>()
+  for (const b of aggs.by_link_total?.inner?.buckets ?? []) {
+    totalsByLink.set(b.key, b.doc_count)
+  }
+
+  return linkIds.map((id) => {
+    const seriesBuckets = seriesByLink.get(id) ?? []
+    const byDay = new Map(seriesBuckets.map((b) => [b.key_as_string, b.doc_count]))
+    return {
+      link_id: id,
+      clicks_total: totalsByLink.get(id) ?? 0,
+      clicks_14d: window.days.map((day) => byDay.get(day) ?? 0),
+    }
+  })
+}

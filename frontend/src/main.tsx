@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { Toaster } from 'sonner'
 
 import * as TanStackQueryProvider from './integrations/tanstack-query/root-provider.tsx'
 
@@ -38,7 +39,23 @@ if (rootElement && !rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
-        <RouterProvider router={router} />
+        <>
+          <Toaster
+            position="top-right"
+            duration={2500}
+            toastOptions={{
+              style: {
+                background: '#1C1B18',
+                color: '#FAFAF7',
+                border: '1px solid #38352F',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontFamily: 'Inter Variable, sans-serif',
+              },
+            }}
+          />
+          <RouterProvider router={router} />
+        </>
       </TanStackQueryProvider.Provider>
     </StrictMode>,
   )

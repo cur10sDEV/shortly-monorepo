@@ -49,13 +49,31 @@ export interface ReferrerStat {
 }
 
 export interface DeviceStat {
-  browser: { name: string; clicks: number }[]
-  os: { name: string; clicks: number }[]
-  device_type: { type: string; clicks: number }[]
+  browser: Array<{ name: string; clicks: number }>
+  os: Array<{ name: string; clicks: number }>
+  device_type: Array<{ type: string; clicks: number }>
 }
 
 export interface LocationStat {
   country: string
   city: string
   clicks: number
+}
+
+export interface OverviewTotals {
+  total_links: number
+  total_clicks: number
+  active_links: number
+}
+
+export interface OverviewLinkStat {
+  link_id: number
+  short_code: string
+  clicks_total: number
+  clicks_14d: number[]
+}
+
+export interface UserOverview {
+  totals: OverviewTotals
+  per_link: OverviewLinkStat[]
 }
