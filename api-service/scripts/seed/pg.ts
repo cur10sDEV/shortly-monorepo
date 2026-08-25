@@ -1,5 +1,5 @@
 import { Pool } from 'pg'
-import { hashPassword } from '../../src/api/v1/utils/password-manager.js'
+import { hash } from 'argon2'
 import type { SeedLink } from './generator.js'
 
 export function createPgPool(connectionString: string): Pool {
@@ -25,7 +25,7 @@ export async function insertSeedLinks(
   links: SeedLink[],
 ): Promise<number[]> {
   // Returns the SERIAL ids in input order — the click docs reference these.
-  const hashed = await hashPassword('demo1234')
+  const hashed = await hash('demo1234')
   if (!hashed) throw new Error('argon2 hashing failed')
   const ids: number[] = []
   for (const l of links) {
