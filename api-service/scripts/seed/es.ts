@@ -20,7 +20,7 @@ export async function bulkIndexClicks(
   client: Client,
   prefix: string,
   docs: SeedClickDoc[],
-): Promise<void> {
+): Promise<number> {
   // Group by target daily index, then one helpers.bulk pass per group.
   const groups = new Map<string, SeedClickDoc[]>()
   for (const d of docs) {
@@ -30,11 +30,16 @@ export async function bulkIndexClicks(
     else groups.set(idx, [d])
   }
 
+  let failed = 0
   for (const [index, group] of groups) {
-    await client.helpers.bulk({
+    // helpers.bulk only rejects on transport-level errors; per-doc failures are
+    // reported in its resolved stats, so they must be summed here.
+    const stats = await client.helpers.bulk({
       datasource: group,
       onDocument: (doc) => [{ index: { _index: index } }, doc],
       refreshOnCompletion: true,
     })
+    failed += stats.failed
   }
+  return failed
 }
