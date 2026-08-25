@@ -2,6 +2,7 @@ import { Link, useLocation } from '@tanstack/react-router'
 import { BarChart3, LayoutDashboard, Link as LinkIcon, LogOut, Settings } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
+import { isNavActive } from '../../lib/nav'
 import { ThemeToggle } from './ThemeToggle'
 
 const navItems = [
@@ -28,7 +29,7 @@ export function Sidebar() {
       <nav className="flex-1 p-3 flex flex-col gap-1" aria-label="Primary">
         {navItems.map((item) => {
           const Icon = item.icon
-          const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to)
+          const isActive = isNavActive(item.to, location.pathname)
           return (
             <Link
               key={item.to}
